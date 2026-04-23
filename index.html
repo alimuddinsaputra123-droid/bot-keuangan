@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - KeuanganKu</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- JS Modules -->
+    <script src="js/app.js" defer></script>
+    <script src="js/charts.js" defer></script>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="nav-brand">
+            <span class="nav-brand-icon">💰</span>
+            KeuanganKu
+        </div>
+        <div class="nav-right">
+            <span class="nav-page-indicator">Dashboard</span>
+            <div class="sync-indicator" id="syncIndicator" title="Online"></div>
+        </div>
+    </nav>
+
+    <!-- SIDEBAR MENU -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMenu()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="menu-section">
+            <div class="menu-title">Menu Utama</div>
+            <a href="index.html" class="menu-item active">
+                <span class="menu-item-icon">📊</span>
+                <span class="menu-item-text">Dashboard</span>
+            </a>
+            <a href="grafik.html" class="menu-item">
+                <span class="menu-item-icon">📈</span>
+                <span class="menu-item-text">Grafik Analisis</span>
+            </a>
+            <a href="transaksi.html" class="menu-item">
+                <span class="menu-item-icon">📝</span>
+                <span class="menu-item-text">Transaksi</span>
+                <span class="menu-item-badge" id="transCount">0</span>
+            </a>
+            <a href="export.html" class="menu-item">
+                <span class="menu-item-icon">📁</span>
+                <span class="menu-item-text">Export Data</span>
+            </a>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-title">Aksi Cepat</div>
+            <div class="menu-item" onclick="exportToExcel(); toggleMenu();">
+                <span class="menu-item-icon">📗</span>
+                <span class="menu-item-text">Export Excel</span>
+            </div>
+            <div class="menu-item" onclick="exportToPDF('summary'); toggleMenu();">
+                <span class="menu-item-icon">📕</span>
+                <span class="menu-item-text">Export PDF</span>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-title">Navigasi</div>
+            <div class="menu-item" onclick="window.location.href='transaksi.html'">
+                <span class="menu-item-icon">➕</span>
+                <span class="menu-item-text">Tambah Transaksi</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="container">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <h1>Dashboard Keuangan</h1>
+                <p>Ringkasan keuangan Anda dalam satu tampilan</p>
+            </div>
+
+            <!-- SUMMARY CARDS -->
+            <div class="summary-grid">
+                <div class="card card-income">
+                    <div class="card-icon">📥</div>
+                    <h3>Total Pemasukan</h3>
+                    <div class="amount income" id="totalIncome">Rp 0</div>
+                    <div class="change change-positive" id="incomeTrend">
+                        <span>↑</span> Seluruh periode
+                    </div>
+                </div>
+
+                <div class="card card-expense">
+                    <div class="card-icon">📤</div>
+                    <h3>Total Pengeluaran</h3>
+                    <div class="amount expense" id="totalExpense">Rp 0</div>
+                    <div class="change change-negative" id="expenseTrend">
+                        <span>↓</span> Seluruh periode
+                    </div>
+                </div>
+
+                <div class="card card-balance">
+                    <div class="card-icon">💎</div>
+                    <h3>Saldo Saat Ini</h3>
+                    <div class="amount balance" id="balance">Rp 0</div>
+                    <div class="change" id="balanceStatus">
+                        <span>=</span> Net balance
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK STATS -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📋</span>
+                        Statistik Cepat
+                    </h2>
+                </div>
+                
+                <div class="summary-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="card" style="padding: var(--space-md);">
+                        <h3 style="font-size: 0.8rem;">Jumlah Transaksi</h3>
+                        <div class="amount" style="font-size: 1.5rem; color: var(--text-primary);" id="totalTrans">0</div>
+                    </div>
+                    <div class="card" style="padding: var(--space-md);">
+                        <h3 style="font-size: 0.8rem;">Rata-rata Transaksi</h3>
+                        <div class="amount" style="font-size: 1.5rem; color: var(--text-primary);" id="avgTrans">Rp 0</div>
+                    </div>
+                    <div class="card" style="padding: var(--space-md);">
+                        <h3 style="font-size: 0.8rem;">Transaksi Terakhir</h3>
+                        <div class="amount" style="font-size: 1.2rem; color: var(--text-primary);" id="lastTrans">-</div>
+                    </div>
+                    <div class="card" style="padding: var(--space-md);">
+                        <h3 style="font-size: 0.8rem;">Kategori Terbanyak</h3>
+                        <div class="amount" style="font-size: 1.2rem; color: var(--text-primary);" id="topCategory">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MINI CHARTS PREVIEW -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📈</span>
+                        Preview Grafik
+                    </h2>
+                    <div class="section-action">
+                        <a href="grafik.html" class="btn btn-primary btn-sm">
+                            Lihat Detail →
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="charts-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="chart-container">
+                        <div class="chart-title">Pemasukan vs Pengeluaran</div>
+                        <div class="chart-wrapper small">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-title">Distribusi Pengeluaran</div>
+                        <div class="chart-wrapper small">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECENT TRANSACTIONS -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📝</span>
+                        Transaksi Terbaru
+                    </h2>
+                    <div class="section-action">
+                        <a href="transaksi.html" class="btn btn-primary btn-sm">
+                            Lihat Semua →
+                        </a>
+                    </div>
+                </div>
+                
+                <div id="recentTransactions">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>Belum ada transaksi</h3>
+                        <p>Tambahkan transaksi pertama Anda di halaman Transaksi</p>
+                        <a href="transaksi.html" class="btn btn-primary mt-3">
+                            Tambah Transaksi
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- INSTALL BUTTON -->
+    <button id="installBtn" class="install-btn" onclick="installApp()">
+        📱 Install App
+    </button>
+
+    <!-- PAGE SPECIFIC SCRIPTS -->
+    <script>
+        // Update dashboard data
+        async function updateDashboard() {
+            try {
+                const transactions = await getAllTransactions();
+                const summary = await calculateSummary(transactions);
+                
+                // Update cards
+                document.getElementById('totalIncome').textContent = formatRupiah(summary.income);
+                document.getElementById('totalExpense').textContent = formatRupiah(summary.expense);
+                document.getElementById('balance').textContent = formatRupiah(summary.balance);
+                
+                // Update quick stats
+                document.getElementById('totalTrans').textContent = summary.count;
+                document.getElementById('transCount').textContent = summary.count;
+                
+                const avg = summary.count > 0 ? Math.round((summary.income + summary.expense) / summary.count) : 0;
+                document.getElementById('avgTrans').textContent = 'Rp ' + formatNumber(avg);
+                
+                // Last transaction
+                if (transactions.length > 0) {
+                    const last = transactions.sort((a, b) => b.timestamp - a.timestamp)[0];
+                    document.getElementById('lastTrans').textContent = formatDate(last.date);
+                    
+                    // Top category
+                    const cats = {};
+                    transactions.forEach(t => {
+                        cats[t.category] = (cats[t.category] || 0) + 1;
+                    });
+                    const topCat = Object.entries(cats).sort((a, b) => b[1] - a[1])[0];
+                    document.getElementById('topCategory').textContent = topCat ? topCat[0] : '-';
+                    
+                    // Show recent transactions (5 latest)
+                    showRecentTransactions(transactions.slice(0, 5));
+                }
+                
+                // Update charts
+                updateAllCharts();
+                
+            } catch (error) {
+                console.error('Dashboard update error:', error);
+            }
+        }
+        
+        function showRecentTransactions(transactions) {
+            const container = document.getElementById('recentTransactions');
+            
+            let html = '<div class="table-container"><table class="table-compact"><thead>';
+            html += '<tr><th>Tanggal</th><th>Deskripsi</th><th>Kategori</th><th>Jenis</th><th>Jumlah</th></tr>';
+            html += '</thead><tbody>';
+            
+            transactions.forEach(t => {
+                const badgeClass = t.type === 'income' ? 'badge-income' : 'badge-expense';
+                const typeLabel = t.type === 'income' ? 'Masuk' : 'Keluar';
+                
+                html += `
+                    <tr>
+                        <td>${formatDate(t.date)}</td>
+                        <td>${t.description}</td>
+                        <td>${t.category}</td>
+                        <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
+                        <td class="${t.type === 'income' ? 'income' : 'expense'}">${formatRupiah(t.amount)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        // Init dashboard when ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait for db init
+            setTimeout(updateDashboard, 500);
+        });
+    </script>
+</body>
+</html>

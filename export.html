@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Data - KeuanganKu</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- JS Modules - URUTAN PENTING! -->
+    <script src="js/app.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/export.js"></script>
+    
+    <!-- Debug Script -->
+    <script>
+        // Debug: Log saat halaman load
+        window.addEventListener('load', () => {
+            console.log('[Page] Export page loaded');
+            console.log('[Page] window.importFromJSON exists:', typeof window.importFromJSON);
+            
+            // Auto-setup listener dengan delay
+            setTimeout(() => {
+                console.log('[Page] Auto-setting up import listener');
+                if (typeof setupImportListener === 'function') {
+                    setupImportListener('importFile');
+                } else {
+                    console.error('[Page] setupImportListener not found!');
+                }
+            }, 1000);
+        });
+    </script>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="nav-brand">
+            <span class="nav-brand-icon">💰</span>
+            KeuanganKu
+        </div>
+        <div class="nav-right">
+            <span class="nav-page-indicator">Export</span>
+            <div class="sync-indicator" id="syncIndicator" title="Online"></div>
+        </div>
+    </nav>
+
+    <!-- SIDEBAR MENU -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMenu()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="menu-section">
+            <div class="menu-title">Menu Utama</div>
+            <a href="index.html" class="menu-item">
+                <span class="menu-item-icon">📊</span>
+                <span class="menu-item-text">Dashboard</span>
+            </a>
+            <a href="grafik.html" class="menu-item">
+                <span class="menu-item-icon">📈</span>
+                <span class="menu-item-text">Grafik Analisis</span>
+            </a>
+            <a href="transaksi.html" class="menu-item">
+                <span class="menu-item-icon">📝</span>
+                <span class="menu-item-text">Transaksi</span>
+            </a>
+            <a href="export.html" class="menu-item active">
+                <span class="menu-item-icon">📁</span>
+                <span class="menu-item-text">Export Data</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="container">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <h1>Export & Backup</h1>
+                <p>Simpan dan bagikan data keuangan Anda</p>
+            </div>
+
+            <!-- DATA PREVIEW -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📊</span>
+                        Ringkasan Data
+                    </h2>
+                </div>
+                
+                <div class="summary-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="card" style="padding: var(--space-md); text-align: center;">
+                        <h3 style="font-size: 0.85rem; color: var(--text-muted);">Total Transaksi</h3>
+                        <div id="previewCount" style="font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-top: 5px;">0</div>
+                    </div>
+                    <div class="card" style="padding: var(--space-md); text-align: center;">
+                        <h3 style="font-size: 0.85rem; color: var(--text-muted);">Total Pemasukan</h3>
+                        <div id="previewIncome" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-success); margin-top: 5px;">Rp 0</div>
+                    </div>
+                    <div class="card" style="padding: var(--space-md); text-align: center;">
+                        <h3 style="font-size: 0.85rem; color: var(--text-muted);">Total Pengeluaran</h3>
+                        <div id="previewExpense" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-danger); margin-top: 5px;">Rp 0</div>
+                    </div>
+                    <div class="card" style="padding: var(--space-md); text-align: center;">
+                        <h3 style="font-size: 0.85rem; color: var(--text-muted);">Saldo</h3>
+                        <div id="previewBalance" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-primary); margin-top: 5px;">Rp 0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXPORT EXCEL -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📗</span>
+                        Export Excel (.xlsx)
+                    </h2>
+                </div>
+                
+                <div class="export-grid">
+                    <div class="export-card">
+                        <div class="export-icon">📊</div>
+                        <h3>Export Lengkap</h3>
+                        <p>Download semua data transaksi dengan sheet ringkasan. Format siap untuk Excel, Google Sheets, atau LibreOffice.</p>
+                        <button onclick="exportToExcel()" class="btn btn-success btn-full btn-lg">
+                            📥 Download Excel
+                        </button>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon">📋</div>
+                        <h3>Fitur Excel</h3>
+                        <ul style="text-align: left; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px; padding-left: 20px;">
+                            <li>Multi-sheet (Data + Ringkasan)</li>
+                            <li>Format currency Rupiah</li>
+                            <li>Auto-width columns</li>
+                            <li>Compatible dengan semua spreadsheet</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXPORT PDF -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📕</span>
+                        Export PDF (.pdf)
+                    </h2>
+                </div>
+                
+                <div class="export-grid">
+                    <div class="export-card">
+                        <div class="export-icon" style="background: rgba(239, 68, 68, 0.15);">📊</div>
+                        <h3>PDF Ringkasan</h3>
+                        <p>Laporan ringkasan dengan grafik batang dan lingkaran. Cocok untuk presentasi cepat.</p>
+                        <button onclick="exportToPDF('summary')" class="btn btn-danger btn-full">
+                            📥 Download Ringkasan
+                        </button>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon" style="background: rgba(249, 115, 22, 0.15);">📋</div>
+                        <h3>PDF Transaksi</h3>
+                        <p>Daftar lengkap semua transaksi dalam format tabel. Maksimal 50 transaksi per halaman.</p>
+                        <button onclick="exportToPDF('transactions')" class="btn btn-orange btn-full">
+                            📥 Download Transaksi
+                        </button>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon" style="background: rgba(139, 92, 246, 0.15);">📑</div>
+                        <h3>PDF Lengkap</h3>
+                        <p>Kombinasi ringkasan, grafik, dan daftar transaksi. Laporan paling lengkap.</p>
+                        <button onclick="exportToPDF('full')" class="btn btn-purple btn-full">
+                            📥 Download Lengkap
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Hidden canvas for PDF chart capture -->
+                <div style="position: fixed; left: -9999px; top: 0;">
+                    <canvas id="barChart" width="400" height="300"></canvas>
+                    <canvas id="pieChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- BACKUP & RESTORE -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">💾</span>
+                        Backup & Restore (JSON)
+                    </h2>
+                </div>
+                
+                <div class="export-grid">
+                    <div class="export-card">
+                        <div class="export-icon" style="background: rgba(59, 130, 246, 0.15);">💾</div>
+                        <h3>Backup Data</h3>
+                        <p>Simpan seluruh database ke file JSON. Gunakan untuk backup berkala atau migrasi data.</p>
+                        <button onclick="exportToJSON()" class="btn btn-info btn-full">
+                            📥 Export JSON
+                        </button>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon" style="background: rgba(245, 158, 11, 0.15);">📤</div>
+                        <h3>Restore Data</h3>
+                        <p>Muat data dari file JSON backup. Data yang ada akan ditambahkan (tidak ditimpa).</p>
+                        <button onclick="document.getElementById('importFile').click()" class="btn btn-warning btn-full">
+                            📤 Import JSON
+                        </button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                    </div>
+                </div>
+                
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md); padding: 15px; margin-top: 20px;">
+                    <p style="color: var(--accent-warning); font-size: 0.9rem; margin: 0;">
+                        <strong>⚠️ Catatan:</strong> File JSON berisi data mentah. Jangan edit manual kecuali Anda tahu formatnya. Selalu backup sebelum import data baru.
+                    </p>
+                </div>
+            </div>
+
+            <!-- DANGER ZONE -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">⚠️</span>
+                        Zona Bahaya
+                    </h2>
+                </div>
+                
+                <div class="export-card" style="border: 1px solid var(--accent-danger);">
+                    <div class="export-icon" style="background: rgba(239, 68, 68, 0.15);">🗑️</div>
+                    <h3 style="color: var(--accent-danger);">Hapus Semua Data</h3>
+                    <p style="color: var(--text-secondary);">Hapus seluruh transaksi dari database. Aksi ini <strong>tidak bisa dibatalkan!</strong></p>
+                    <button onclick="clearAllData()" class="btn btn-danger btn-full">
+                        🗑️ Hapus Semua Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- INSTALL BUTTON -->
+    <button id="installBtn" class="install-btn" onclick="installApp()">
+        📱 Install App
+    </button>
+
+    <!-- PAGE SPECIFIC SCRIPTS -->
+    <script>
+        // Setup import listener
+        setupImportListener('importFile');
+        
+        // Update preview stats
+        async function updatePreview() {
+            try {
+                const transactions = await getAllTransactions();
+                const summary = await calculateSummary(transactions);
+                
+                document.getElementById('previewCount').textContent = summary.count;
+                document.getElementById('previewIncome').textContent = formatRupiah(summary.income);
+                document.getElementById('previewExpense').textContent = formatRupiah(summary.expense);
+                document.getElementById('previewBalance').textContent = formatRupiah(summary.balance);
+                
+                // Prepare hidden charts for PDF
+                if (transactions.length > 0) {
+                    const chartData = processChartDataForExport(transactions);
+                    updateBarChart(chartData.monthly.labels, chartData.monthly.income, chartData.monthly.expense);
+                    updatePieChart(chartData.category.labels, chartData.category.data);
+                }
+                
+            } catch (error) {
+                console.error('Preview error:', error);
+            }
+        }
+        
+        // Simplified chart data processor for export page
+        function processChartDataForExport(transactions) {
+            transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            const monthly = {};
+            transactions.forEach(t => {
+                const key = t.date.substring(0, 7);
+                if (!monthly[key]) monthly[key] = { income: 0, expense: 0 };
+                monthly[key][t.type] += t.amount;
+            });
+            
+            const months = Object.keys(monthly).slice(-6);
+            
+            const cats = {};
+            transactions.filter(t => t.type === 'expense').forEach(t => {
+                cats[t.category] = (cats[t.category] || 0) + t.amount;
+            });
+            
+            return {
+                monthly: {
+                    labels: months.map(m => {
+                        const [y, mo] = m.split('-');
+                        return `${mo}/${y}`;
+                    }),
+                    income: months.map(m => monthly[m].income),
+                    expense: months.map(m => monthly[m].expense)
+                },
+                category: {
+                    labels: Object.keys(cats),
+                    data: Object.values(cats)
+                }
+            };
+        }
+        
+        // Clear all data with confirmation
+        async function clearAllData() {
+            const confirm1 = confirm('⚠️ PERINGATAN: Anda akan menghapus SEMUA data transaksi!');
+            if (!confirm1) return;
+            
+            const confirm2 = confirm('Data yang dihapus tidak bisa dikembalikan. Yakin ingin melanjutkan?');
+            if (!confirm2) return;
+            
+            const confirm3 = prompt('Ketik "HAPUS" untuk mengkonfirmasi penghapusan total:');
+            if (confirm3 !== 'HAPUS') {
+                showNotification('Penghapusan dibatalkan', 'info');
+                return;
+            }
+            
+            try {
+                await clearAllTransactions();
+                showNotification('Semua data telah dihapus! 🗑️', 'success');
+                updatePreview();
+            } catch (error) {
+                console.error('Clear error:', error);
+                showNotification('Gagal menghapus data', 'error');
+            }
+        }
+        
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(updatePreview, 500);
+        });
+    </script>
+</body>
+</html>

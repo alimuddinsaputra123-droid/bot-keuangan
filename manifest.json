@@ -1,0 +1,118 @@
+{
+    "name": "KeuanganKu - Laporan Keuangan",
+    "short_name": "KeuanganKu",
+    "description": "Aplikasi laporan keuangan multi-page dengan Excel, PDF, Grafik, dan Dark Mode",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#0f172a",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "id": "/index.html",
+    
+    "icons": [
+        {
+            "src": "icons/icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-128x128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icons/icon-384x384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    
+    "screenshots": [
+        {
+            "src": "screenshots/dashboard.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Dashboard KeuanganKu"
+        },
+        {
+            "src": "screenshots/mobile-dashboard.png",
+            "sizes": "750x1334",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Dashboard Mobile"
+        }
+    ],
+    
+    "categories": ["finance", "productivity", "utilities"],
+    "lang": "id",
+    "dir": "ltr",
+    
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "Lihat ringkasan keuangan",
+            "url": "/index.html",
+            "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "Tambah Transaksi",
+            "short_name": "Transaksi",
+            "description": "Tambah transaksi baru",
+            "url": "/transaksi.html",
+            "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "Grafik Analisis",
+            "short_name": "Grafik",
+            "description": "Lihat analisis grafik",
+            "url": "/grafik.html",
+            "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+        },
+        {
+            "name": "Export Data",
+            "short_name": "Export",
+            "description": "Export Excel atau PDF",
+            "url": "/export.html",
+            "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+        }
+    ],
+    
+    "related_applications": [],
+    "prefer_related_applications": false
+}

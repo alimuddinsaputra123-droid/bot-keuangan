@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafik Analisis - KeuanganKu</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- JS Modules -->
+    <script src="js/app.js" defer></script>
+    <script src="js/charts.js" defer></script>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="nav-brand">
+            <span class="nav-brand-icon">💰</span>
+            KeuanganKu
+        </div>
+        <div class="nav-right">
+            <span class="nav-page-indicator">Grafik</span>
+            <div class="sync-indicator" id="syncIndicator" title="Online"></div>
+        </div>
+    </nav>
+
+    <!-- SIDEBAR MENU -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMenu()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="menu-section">
+            <div class="menu-title">Menu Utama</div>
+            <a href="index.html" class="menu-item">
+                <span class="menu-item-icon">📊</span>
+                <span class="menu-item-text">Dashboard</span>
+            </a>
+            <a href="grafik.html" class="menu-item active">
+                <span class="menu-item-icon">📈</span>
+                <span class="menu-item-text">Grafik Analisis</span>
+            </a>
+            <a href="transaksi.html" class="menu-item">
+                <span class="menu-item-icon">📝</span>
+                <span class="menu-item-text">Transaksi</span>
+            </a>
+            <a href="export.html" class="menu-item">
+                <span class="menu-item-icon">📁</span>
+                <span class="menu-item-text">Export Data</span>
+            </a>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-title">Aksi Cepat</div>
+            <div class="menu-item" onclick="refreshCharts(); toggleMenu();">
+                <span class="menu-item-icon">🔄</span>
+                <span class="menu-item-text">Refresh Grafik</span>
+            </div>
+            <div class="menu-item" onclick="exportToPDF('summary'); toggleMenu();">
+                <span class="menu-item-icon">📕</span>
+                <span class="menu-item-text">Export PDF</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="container">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <h1>Grafik Analisis</h1>
+                <p>Visualisasi data keuangan Anda</p>
+            </div>
+
+            <!-- CHART CONTROLS -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">🎛️</span>
+                        Kontrol Grafik
+                    </h2>
+                    <div class="section-action">
+                        <button onclick="refreshCharts()" class="btn btn-info btn-sm">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="btn-group btn-group-center">
+                    <button onclick="updateChartPeriod(6)" class="btn btn-outline btn-sm">6 Bulan</button>
+                    <button onclick="updateChartPeriod(12)" class="btn btn-outline btn-sm">1 Tahun</button>
+                    <button onclick="updateChartPeriod(24)" class="btn btn-outline btn-sm">2 Tahun</button>
+                    <button onclick="updateChartPeriod('all')" class="btn btn-outline btn-sm">Semua</button>
+                </div>
+            </div>
+
+            <!-- BAR CHART: INCOME VS EXPENSE -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📊</span>
+                        Pemasukan vs Pengeluaran per Bulan
+                    </h2>
+                </div>
+                
+                <div class="chart-container full-width">
+                    <div class="chart-wrapper">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-2">
+                    <span class="badge badge-income" style="margin-right: 10px;">📥 Pemasukan</span>
+                    <span class="badge badge-expense">📤 Pengeluaran</span>
+                </div>
+            </div>
+
+            <!-- PIE CHART: EXPENSE CATEGORIES -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">🥧</span>
+                        Distribusi Kategori Pengeluaran
+                    </h2>
+                </div>
+                
+                <div class="chart-container" style="max-width: 600px; margin: 0 auto;">
+                    <div class="chart-wrapper">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LINE CHART: BALANCE TREND -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📈</span>
+                        Trend Saldo Kumulatif
+                    </h2>
+                </div>
+                
+                <div class="chart-container full-width">
+                    <div class="chart-wrapper">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+                
+                <div style="background: var(--bg-card); padding: 15px; border-radius: var(--radius-md); margin-top: 15px;">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                        <strong style="color: var(--accent-primary);">💡 Interpretasi:</strong> 
+                        Garis naik menunjukkan penambahan saldo, turun menunjukkan pengeluaran melebihi pemasukan.
+                        Titik tertinggi adalah saldo maksimal Anda.
+                    </p>
+                </div>
+            </div>
+
+            <!-- CHART INSIGHTS -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">💡</span>
+                        Insight Data
+                    </h2>
+                </div>
+                
+                <div class="summary-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                    <div class="card" style="padding: var(--space-md);">
+                        <h3 style="font-size: 0.85rem; color: var(--text-muted);">Bulan Tertinggi</h3>
+                        <div id="highestMonth" style="font-size: 1.3rem; color: var(--text-primary); font-weight: 600; margin-top: 5px;">-</div>
+                        <div id="highestMonthVal" style="font-size: 0.9rem; color: var(--accent-success);">Rp 0</div>
+                    </div>
+                    
+                    <div class="card" style="padding: var(--space-md);">
+                        <h3 style="font-size: 0.85rem; color: var(--text-muted);">Kategori Terbesar</h3>
+                        <div id="topExpenseCat" style="font-size: 1.3rem; color: var(--text-primary); font-weight: 600; margin-top: 5px;">-</div>
+                        <div id="topExpenseVal" style="font-size: 0.9rem; color: var(--accent-danger);">Rp 0</div>
+                    </div>
+                    
+                    <div class="card" style="padding: var(--space-md);">
+                        <h3 style="font-size: 0.85rem; color: var(--text-muted);">Rasio Hemat</h3>
+                        <div id="savingRatio" style="font-size: 1.3rem; color: var(--text-primary); font-weight: 600; margin-top: 5px;">-</div>
+                        <div style="font-size: 0.9rem; color: var(--text-muted);">Pemasukan - Pengeluaran</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- INSTALL BUTTON -->
+    <button id="installBtn" class="install-btn" onclick="installApp()">
+        📱 Install App
+    </button>
+
+    <!-- PAGE SPECIFIC SCRIPTS -->
+    <script>
+        let chartPeriod = 6; // Default 6 months
+        
+        // Update charts dengan periode tertentu
+        async function updateChartPeriod(period) {
+            chartPeriod = period;
+            
+            try {
+                const transactions = await getAllTransactions();
+                if (transactions.length === 0) return;
+                
+                // Sort by date
+                transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // Filter by period
+                let filtered = transactions;
+                if (period !== 'all') {
+                    const months = parseInt(period);
+                    const cutoff = new Date();
+                    cutoff.setMonth(cutoff.getMonth() - months);
+                    filtered = transactions.filter(t => new Date(t.date) >= cutoff);
+                }
+                
+                // Process data
+                const data = processChartData(filtered);
+                if (!data) return;
+                
+                // Update charts
+                updateBarChart(data.monthly.labels, data.monthly.income, data.monthly.expense);
+                updatePieChart(data.category.labels, data.category.data);
+                updateLineChart(data.trend.labels, data.trend.data);
+                
+                // Update insights
+                updateInsights(filtered);
+                
+                showNotification(`Grafik diperbarui (${period === 'all' ? 'Semua' : period + ' bulan'}) 📊`, 'success');
+                
+            } catch (error) {
+                console.error('Chart period error:', error);
+            }
+        }
+        
+        // Update insight cards
+        async function updateInsights(transactions) {
+            try {
+                // Highest month
+                const monthly = {};
+                transactions.forEach(t => {
+                    const key = t.date.substring(0, 7);
+                    if (!monthly[key]) monthly[key] = 0;
+                    monthly[key] += t.type === 'income' ? t.amount : -t.amount;
+                });
+                
+                const sorted = Object.entries(monthly).sort((a, b) => b[1] - a[1]);
+                if (sorted.length > 0) {
+                    const [year, month] = sorted[0][0].split('-');
+                    const date = new Date(year, month - 1);
+                    document.getElementById('highestMonth').textContent = date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                    document.getElementById('highestMonthVal').textContent = formatRupiah(sorted[0][1]);
+                }
+                
+                // Top expense category
+                const cats = {};
+                let totalExpense = 0;
+                transactions.filter(t => t.type === 'expense').forEach(t => {
+                    cats[t.category] = (cats[t.category] || 0) + t.amount;
+                    totalExpense += t.amount;
+                });
+                
+                const topCat = Object.entries(cats).sort((a, b) => b[1] - a[1])[0];
+                if (topCat) {
+                    document.getElementById('topExpenseCat').textContent = topCat[0];
+                    document.getElementById('topExpenseVal').textContent = formatRupiah(topCat[1]);
+                }
+                
+                // Saving ratio
+                const summary = await calculateSummary(transactions);
+                const ratio = summary.income > 0 ? ((summary.income - summary.expense) / summary.income * 100).toFixed(1) : 0;
+                document.getElementById('savingRatio').textContent = ratio + '%';
+                
+            } catch (error) {
+                console.error('Insights error:', error);
+            }
+        }
+        
+        // Override processChartData untuk support period
+        function processChartData(transactions) {
+            if (!transactions || transactions.length === 0) return null;
+
+            transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Monthly data
+            const monthlyData = {};
+            transactions.forEach(t => {
+                const monthKey = t.date.substring(0, 7);
+                if (!monthlyData[monthKey]) monthlyData[monthKey] = { income: 0, expense: 0 };
+                monthlyData[monthKey][t.type] += t.amount;
+            });
+
+            const months = Object.keys(monthlyData);
+            const income = months.map(m => monthlyData[m].income);
+            const expense = months.map(m => monthlyData[m].expense);
+            const labels = months.map(m => {
+                const [y, mo] = m.split('-');
+                return `${mo}/${y}`;
+            });
+
+            // Category
+            const cats = {};
+            transactions.filter(t => t.type === 'expense').forEach(t => {
+                cats[t.category] = (cats[t.category] || 0) + t.amount;
+            });
+
+            // Trend
+            let bal = 0;
+            const balances = [];
+            const dates = [];
+            transactions.forEach(t => {
+                bal += t.type === 'income' ? t.amount : -t.amount;
+                dates.push(t.date);
+                balances.push(bal);
+            });
+
+            // Sample if too many
+            let sampledDates = dates;
+            let sampledBalances = balances;
+            if (dates.length > 30) {
+                const step = Math.ceil(dates.length / 30);
+                sampledDates = dates.filter((_, i) => i % step === 0);
+                sampledBalances = balances.filter((_, i) => i % step === 0);
+            }
+
+            return {
+                monthly: { labels, income, expense },
+                category: { labels: Object.keys(cats), data: Object.values(cats) },
+                trend: { labels: sampledDates, data: sampledBalances }
+            };
+        }
+        
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                updateChartPeriod(6);
+            }, 500);
+        });
+    </script>
+</body>
+</html>

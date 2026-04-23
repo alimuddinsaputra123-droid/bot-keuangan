@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaksi - KeuanganKu</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- JS Modules -->
+    <script src="js/app.js" defer></script>
+    <script src="js/export.js" defer></script>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="nav-brand">
+            <span class="nav-brand-icon">💰</span>
+            KeuanganKu
+        </div>
+        <div class="nav-right">
+            <span class="nav-page-indicator">Transaksi</span>
+            <div class="sync-indicator" id="syncIndicator" title="Online"></div>
+        </div>
+    </nav>
+
+    <!-- SIDEBAR MENU -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMenu()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="menu-section">
+            <div class="menu-title">Menu Utama</div>
+            <a href="index.html" class="menu-item">
+                <span class="menu-item-icon">📊</span>
+                <span class="menu-item-text">Dashboard</span>
+            </a>
+            <a href="grafik.html" class="menu-item">
+                <span class="menu-item-icon">📈</span>
+                <span class="menu-item-text">Grafik Analisis</span>
+            </a>
+            <a href="transaksi.html" class="menu-item active">
+                <span class="menu-item-icon">📝</span>
+                <span class="menu-item-text">Transaksi</span>
+            </a>
+            <a href="export.html" class="menu-item">
+                <span class="menu-item-icon">📁</span>
+                <span class="menu-item-text">Export Data</span>
+            </a>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-title">Aksi Cepat</div>
+            <div class="menu-item" onclick="scrollToForm(); toggleMenu();">
+                <span class="menu-item-icon">➕</span>
+                <span class="menu-item-text">Tambah Baru</span>
+            </div>
+            <div class="menu-item" onclick="resetFilter(); toggleMenu();">
+                <span class="menu-item-icon">🔄</span>
+                <span class="menu-item-text">Reset Filter</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="container">
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <h1>Daftar Transaksi</h1>
+                <p>Kelola dan pantau semua transaksi Anda</p>
+            </div>
+
+            <!-- ADD TRANSACTION FORM -->
+            <div class="section" id="formSection">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">➕</span>
+                        Tambah Transaksi Baru
+                    </h2>
+                </div>
+                
+                <form id="transactionForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="date">Tanggal <span class="required">*</span></label>
+                            <input type="date" id="date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="type">Jenis Transaksi <span class="required">*</span></label>
+                            <select id="type" required>
+                                <option value="">Pilih Jenis</option>
+                                <option value="income">📥 Pemasukan</option>
+                                <option value="expense">📤 Pengeluaran</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Kategori <span class="required">*</span></label>
+                            <select id="category" required>
+                                <option value="">Pilih Kategori</option>
+                                <optgroup label="📥 Pemasukan">
+                                    <option value="Gaji">💼 Gaji</option>
+                                    <option value="Bonus">🎁 Bonus</option>
+                                    <option value="Investasi">📈 Investasi</option>
+                                    <option value="Lainnya">📦 Lainnya</option>
+                                </optgroup>
+                                <optgroup label="📤 Pengeluaran">
+                                    <option value="Makanan">🍔 Makanan</option>
+                                    <option value="Transportasi">🚗 Transportasi</option>
+                                    <option value="Belanja">🛍️ Belanja</option>
+                                    <option value="Tagihan">💡 Tagihan</option>
+                                    <option value="Kesehatan">🏥 Kesehatan</option>
+                                    <option value="Pendidikan">📚 Pendidikan</option>
+                                    <option value="Lainnya">📦 Lainnya</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="amount">Jumlah (Rp) <span class="required">*</span></label>
+                            <input type="number" id="amount" placeholder="0" min="1" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="description">Deskripsi <span class="required">*</span></label>
+                            <input type="text" id="description" placeholder="Contoh: Gaji Bulan April, Belanja Bulanan, dll" required>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <span>💾</span> Simpan Transaksi
+                        </button>
+                        <button type="reset" class="btn btn-outline">
+                            🔄 Reset Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- FILTER BAR -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">🔍</span>
+                        Filter & Cari
+                    </h2>
+                    <div class="section-action">
+                        <button onclick="exportToExcelFiltered()" class="btn btn-success btn-sm">
+                            📗 Export Filter
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Bulan</label>
+                        <input type="month" id="filterMonth" onchange="applyFilter()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Jenis</label>
+                        <select id="filterType" onchange="applyFilter()">
+                            <option value="">Semua Jenis</option>
+                            <option value="income">📥 Pemasukan</option>
+                            <option value="expense">📤 Pengeluaran</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Kategori</label>
+                        <select id="filterCategory" onchange="applyFilter()">
+                            <option value="">Semua Kategori</option>
+                            <option value="Gaji">💼 Gaji</option>
+                            <option value="Bonus">🎁 Bonus</option>
+                            <option value="Investasi">📈 Investasi</option>
+                            <option value="Makanan">🍔 Makanan</option>
+                            <option value="Transportasi">🚗 Transportasi</option>
+                            <option value="Belanja">🛍️ Belanja</option>
+                            <option value="Tagihan">💡 Tagihan</option>
+                            <option value="Kesehatan">🏥 Kesehatan</option>
+                            <option value="Pendidikan">📚 Pendidikan</option>
+                            <option value="Lainnya">📦 Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex: 0 0 auto;">
+                        <label>&nbsp;</label>
+                        <button onclick="resetFilter()" class="btn btn-warning" style="white-space: nowrap;">
+                            🔄 Reset
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="filterStats" style="margin-top: 15px; padding: 10px 15px; background: var(--bg-card); border-radius: var(--radius-md); display: none;">
+                    <span style="color: var(--text-secondary);">Menampilkan <strong id="filteredCount" style="color: var(--accent-primary);">0</strong> dari <strong id="totalCount" style="color: var(--text-primary);">0</strong> transaksi</span>
+                </div>
+            </div>
+
+            <!-- TRANSACTIONS LIST -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-title-icon">📋</span>
+                        Daftar Transaksi
+                    </h2>
+                </div>
+                
+                <div id="transactionList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>Belum ada transaksi</h3>
+                        <p>Tambahkan transaksi pertama Anda menggunakan form di atas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- INSTALL BUTTON -->
+    <button id="installBtn" class="install-btn" onclick="installApp()">
+        📱 Install App
+    </button>
+
+    <!-- PAGE SPECIFIC SCRIPTS -->
+    <script>
+        // Set default date
+        document.getElementById('date').valueAsDate = new Date();
+        
+        // Form submission
+        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const transaction = {
+                date: document.getElementById('date').value,
+                description: document.getElementById('description').value,
+                category: document.getElementById('category').value,
+                type: document.getElementById('type').value,
+                amount: parseFloat(document.getElementById('amount').value)
+            };
+            
+            try {
+                await addTransaction(transaction);
+                showNotification('Transaksi berhasil disimpan! ✅', 'success');
+                
+                // Reset form (keep date)
+                const today = document.getElementById('date').value;
+                document.getElementById('transactionForm').reset();
+                document.getElementById('date').value = today;
+                
+                // Refresh list
+                loadTransactions();
+                
+                // Update stats in background
+                if (typeof updateAllCharts === 'function') {
+                    updateAllCharts();
+                }
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                showNotification('Gagal menyimpan transaksi', 'error');
+            }
+        });
+        
+        // Load transactions
+        async function loadTransactions() {
+            try {
+                const transactions = await getAllTransactions();
+                currentTransactions = transactions; // Set global untuk export
+                
+                displayTransactions(transactions);
+                updateFilterStats(transactions.length, transactions.length);
+                
+            } catch (error) {
+                console.error('Load error:', error);
+            }
+        }
+        
+        // Display transactions
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transactionList');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>Belum ada transaksi</h3>
+                        <p>Tambahkan transaksi pertama Anda menggunakan form di atas</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by date desc
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            let html = '<div class="table-container"><table><thead>';
+            html += '<tr><th>Tanggal</th><th>Deskripsi</th><th>Kategori</th><th>Jenis</th><th>Jumlah</th><th>Aksi</th></tr>';
+            html += '</thead><tbody>';
+            
+            transactions.forEach(t => {
+                const badgeClass = t.type === 'income' ? 'badge-income' : 'badge-expense';
+                const typeLabel = t.type === 'income' ? 'Masuk' : 'Keluar';
+                
+                html += `
+                    <tr>
+                        <td>${formatDate(t.date)}</td>
+                        <td>${t.description}</td>
+                        <td>${t.category}</td>
+                        <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
+                        <td class="${t.type === 'income' ? 'income' : 'expense'}">${formatRupiah(t.amount)}</td>
+                        <td class="actions">
+                            <button onclick="deleteTrans(${t.id})" class="btn btn-danger btn-sm" title="Hapus">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        // Delete transaction
+        async function deleteTrans(id) {
+            if (!confirm('Yakin ingin menghapus transaksi ini?')) return;
+            
+            try {
+                await deleteTransaction(id);
+                showNotification('Transaksi dihapus! 🗑️', 'success');
+                loadTransactions();
+            } catch (error) {
+                console.error('Delete error:', error);
+                showNotification('Gagal menghapus', 'error');
+            }
+        }
+        
+        // Apply filter
+        async function applyFilter() {
+            const month = document.getElementById('filterMonth').value;
+            const type = document.getElementById('filterType').value;
+            const category = document.getElementById('filterCategory').value;
+            
+            try {
+                let transactions = await getAllTransactions();
+                
+                if (month) {
+                    transactions = transactions.filter(t => t.date.startsWith(month));
+                }
+                if (type) {
+                    transactions = transactions.filter(t => t.type === type);
+                }
+                if (category) {
+                    transactions = transactions.filter(t => t.category === category);
+                }
+                
+                currentTransactions = transactions;
+                displayTransactions(transactions);
+                
+                const total = (await getAllTransactions()).length;
+                updateFilterStats(transactions.length, total);
+                
+            } catch (error) {
+                console.error('Filter error:', error);
+            }
+        }
+        
+        // Reset filter
+        function resetFilter() {
+            document.getElementById('filterMonth').value = '';
+            document.getElementById('filterType').value = '';
+            document.getElementById('filterCategory').value = '';
+            loadTransactions();
+            showNotification('Filter direset! 🔄', 'info');
+        }
+        
+        // Update filter stats
+        function updateFilterStats(filtered, total) {
+            const stats = document.getElementById('filterStats');
+            if (filtered !== total) {
+                stats.style.display = 'block';
+                document.getElementById('filteredCount').textContent = filtered;
+                document.getElementById('totalCount').textContent = total;
+            } else {
+                stats.style.display = 'none';
+            }
+        }
+        
+        // Scroll to form
+        function scrollToForm() {
+            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(loadTransactions, 500);
+        });
+    </script>
+</body>
+</html>
